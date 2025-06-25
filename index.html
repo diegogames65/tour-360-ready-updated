@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tour Virtual 360º</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core/index.min.css" />
+
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    #viewer {
+      width: 100vw;
+      height: 100vh;
+    }
+    #menu {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(255,255,255,0.85);
+      padding: 10px;
+      border-radius: 8px;
+      z-index: 100;
+    }
+    #menu button {
+      margin: 4px;
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="menu">
+    <button onclick="loadPanorama('images/pano1.jpg')">Panorama 1</button>
+    <button onclick="loadPanorama('images/pano2.jpg')">Panorama 2</button>
+  </div>
+
+  <div id="viewer"></div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three/build/three.module.js",
+        "@photo-sphere-viewer/core": "https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core/index.module.js"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import { Viewer } from '@photo-sphere-viewer/core';
+
+    const viewer = new Viewer({
+      container: document.querySelector('#viewer'),
+      panorama: 'images/pano1.jpg',
+    });
+
+    window.loadPanorama = function (path) {
+      viewer.setPanorama(path);
+    };
+  </script>
+
+</body>
+</html>
