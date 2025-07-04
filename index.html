@@ -1,14 +1,114 @@
-<!-- Salve como index.html -->
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Tour Méier Interativo</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>Tour Méier</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/panolens@0.11.0/build/panolens.min.js"></script>
   <style>
-    /* (mesmo CSS anterior, mantido) */
+    * {
+      box-sizing: border-box;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      overflow: hidden;
+      background: #000;
+    }
+    #start-screen {
+      position: fixed;
+      width: 100vw;
+      height: 100vh;
+      background-color: #111;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      padding: 2rem;
+      z-index: 9999;
+    }
+    #start-screen h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+    #start-screen button {
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      background-color: #28a745;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      color: white;
+      transition: background 0.3s;
+    }
+    #start-screen button:hover {
+      background-color: #218838;
+    }
+    #container {
+      width: 100vw;
+      height: 100vh;
+      display: none;
+    }
+    #menu {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 1rem;
+      border-radius: 12px;
+      color: white;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    }
+    #menu button {
+      background-color: rgba(255, 255, 255, 0.1);
+      border: 1px solid white;
+      color: white;
+      padding: 0.6rem 1rem;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: background 0.3s;
+    }
+    #menu button:hover {
+      background-color: rgba(255, 255, 255, 0.25);
+    }
+
+    /* Responsividade */
+    @media (max-width: 600px) {
+      #start-screen h1 {
+        font-size: 1.5rem;
+      }
+      #start-screen button {
+        font-size: 1rem;
+        width: 100%;
+        max-width: 240px;
+      }
+      #menu {
+        width: auto;
+        top: auto;
+        bottom: 1rem;
+        left: 50%;
+        transform: translateX(-50%);
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.8rem 1rem;
+      }
+      #menu button {
+        font-size: 0.85rem;
+        padding: 0.5rem 0.8rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -32,38 +132,12 @@
     const cozinha1 = new PANOLENS.ImagePanorama('images/cozinha1.jpg');
     const cozinha2 = new PANOLENS.ImagePanorama('images/cozinha2.jpg');
 
-    sala1.addEventListener('enter', () => {
-      sala1.add(new PANOLENS.Infospot(350, PANOLENS.DataImage.Info, false)
-        .setText('Ir para Sala 2')
-        .addEventListener('click', () => viewer.setPanorama(sala2))
-        .position.set(3000, 0, 0));
-
-      sala1.add(new PANOLENS.Infospot(350, PANOLENS.DataImage.Info, false)
-        .setText('Ir para Cozinha 1')
-        .addEventListener('click', () => viewer.setPanorama(cozinha1))
-        .position.set(0, 0, 3000));
-    });
-
-    sala2.addEventListener('enter', () => {
-      sala2.add(new PANOLENS.Infospot(350, PANOLENS.DataImage.Info, false)
-        .setText('Voltar para Sala 1')
-        .addEventListener('click', () => viewer.setPanorama(sala1))
-        .position.set(-3000, 0, 0));
-    });
-
-    cozinha1.addEventListener('enter', () => {
-      cozinha1.add(new PANOLENS.Infospot(350, PANOLENS.DataImage.Info, false)
-        .setText('Ir para Cozinha 2')
-        .addEventListener('click', () => viewer.setPanorama(cozinha2))
-        .position.set(3000, 0, 0));
-    });
-
-    cozinha2.addEventListener('enter', () => {
-      cozinha2.add(new PANOLENS.Infospot(350, PANOLENS.DataImage.Info, false)
-        .setText('Voltar para Cozinha 1')
-        .addEventListener('click', () => viewer.setPanorama(cozinha1))
-        .position.set(-3000, 0, 0));
-    });
+    sala1.link(sala2, new THREE.Vector3(3000, 0, 0), 'Ir para Sala 2');
+    sala2.link(sala1, new THREE.Vector3(-3000, 0, 0), 'Voltar para Sala 1');
+    sala1.link(cozinha1, new THREE.Vector3(0, 0, 3000), 'Ir para Cozinha 1');
+    cozinha1.link(sala1, new THREE.Vector3(0, 0, -3000), 'Voltar para Sala 1');
+    cozinha1.link(cozinha2, new THREE.Vector3(3000, 0, 0), 'Ir para Cozinha 2');
+    cozinha2.link(cozinha1, new THREE.Vector3(-3000, 0, 0), 'Voltar para Cozinha 1');
 
     const viewer = new PANOLENS.Viewer({
       container: document.querySelector('#container'),
