@@ -24,7 +24,7 @@
     #viewer {
       width: 100vw;
       height: 100vh;
-      position: absolute;
+      position: fixed;
       top: 0;
       left: 0;
     }
@@ -40,12 +40,12 @@
       z-index: 1000;
       text-align: center;
       padding: 0 20px;
+      color: #fff;
     }
 
     #welcome h1 {
       font-size: 2.8em;
       margin-bottom: 30px;
-      color: #fff;
     }
 
     #welcome button {
@@ -75,6 +75,7 @@
       flex-wrap: wrap;
       gap: 10px;
       z-index: 900;
+      display: none; /* inicialmente oculto */
     }
 
     #menu button {
@@ -90,6 +91,23 @@
 
     #menu button:hover {
       background: #444;
+    }
+
+    #message {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 0, 0, 0.8);
+      padding: 12px 20px;
+      border-radius: 10px;
+      color: white;
+      font-weight: bold;
+      display: none;
+      z-index: 1100;
+      max-width: 90vw;
+      text-align: center;
+      font-size: 1em;
     }
 
     @media (max-width: 600px) {
@@ -117,51 +135,96 @@
 
 <body>
 
-  <!-- Tela de boas-vindas -->
   <div id="welcome">
     <h1>Bem-vindo ao Tour Virtual</h1>
-    <button onclick="startTour()">Iniciar Tour</button>
+    <button id="startBtn">Iniciar Tour</button>
   </div>
 
-  <!-- Visualizador 360º -->
   <div id="viewer"></div>
 
-  <!-- Menu inferior -->
-  <div id="menu" style="display: none;">
+  <div id="menu">
     <button onclick="loadPanorama('images/cozinha1.jpg')">Cozinha 1</button>
     <button onclick="loadPanorama('images/cozinha2.jpg')">Cozinha 2</button>
     <button onclick="loadPanorama('images/sala1.jpg')">Sala 1</button>
     <button onclick="loadPanorama('images/sala2.jpg')">Sala 2</button>
   </div>
 
-  <!-- Importmap -->
+  <div id="message"></div>
+
   <script type="importmap">
     {
       "imports": {
         "three": "https://cdn.jsdelivr.net/npm/three/build/three.module.js",
-        "@photo-sphere-viewer/core": "https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core/index.module.js"
+        "@photo-sphere-viewer/core": "https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core/index.module.js",
+        "@photo-sphere-viewer/gyroscope-plugin": "https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/gyroscope-plugin/index.module.js"
       }
     }
   </script>
 
-  <!-- Script principal -->
   <script type="module">
     import { Viewer } from '@photo-sphere-viewer/core';
+    import { GyroscopePlugin } from '@photo-sphere-viewer/gyroscope-plugin';
 
     const viewer = new Viewer({
       container: document.querySelector('#viewer'),
       panorama: 'images/cozinha1.jpg',
-       motionSpeed: 2, // aumento da velocidade (ajuste o valor como preferir)
+      motionSpeed: 2.5,
+      plugins: [
+        [GyroscopePlugin, {}]
+      ],
     });
 
     window.loadPanorama = function (path) {
       viewer.setPanorama(path);
     };
 
-    window.startTour = function () {
-      document.getElementById('welcome').style.display = 'none';
-      document.getElementById('menu').style.display = 'flex';
-    };
+    const welcome = document.getElementById('welcome');
+    const menu = document.getElementById('menu');
+    const message = document.getElementById('message');
+    const startBtn = document.getElementById('startBtn');
+
+    function showMessage(text) {
+      message.textContent = text;
+      message.style.display = 'block';
+      setTimeout(() => {
+        message.style.display = 'none';
+      }, 5000);
+    }
+
+    async function requestGyroPermission() {
+      if (
+        typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function'
+      ) {
+        try {
+          const response = await DeviceOrientationEvent.requestPermission();
+          if (response === 'granted') {
+            viewer.plugins.get(GyroscopePlugin).start();
+            return true;
+          } else {
+            showMessage('Permissão para giroscópio negada. Use o toque/mouse para navegar.');
+            return false;
+          }
+        } catch (error) {
+          console.error(error);
+          showMessage('Erro ao solicitar permissão do giroscópio.');
+          return false;
+        }
+      } else {
+        // Navegadores que não precisam de permissão explícita
+        viewer.plugins.get(GyroscopePlugin).start();
+        return true;
+      }
+    }
+
+    startBtn.addEventListener('click', async () => {
+      const granted = await requestGyroPermission();
+      welcome.style.display = 'none';
+      menu.style.display = 'flex';
+      if (!granted) {
+        // se quiser, pode mostrar um botão para tentar permissão novamente
+      }
+    });
   </script>
 
 </body>
