@@ -1,142 +1,129 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <title>Tour Virtual Casa Méier</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core/index.min.css" />
-
+  <meta charset="UTF-8">
+  <title>Tour Méier</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/panolens@0.11.0/build/panolens.min.js"></script>
   <style>
+    * { box-sizing: border-box; }
     body, html {
       margin: 0;
       padding: 0;
-      font-family: Arial, sans-serif;
-      background: #000;
-      color: #fff;
-      height: 100vh;
+      font-family: sans-serif;
       overflow: hidden;
     }
-
-    #welcome {
-      position: absolute;
-      top: 0;
-      left: 0;
+    #start-screen {
+      position: fixed;
       width: 100vw;
       height: 100vh;
-      background: linear-gradient(to bottom, #111, #000);
+      background-color: #111;
+      color: white;
       display: flex;
-      flex-direction: column;
-      justify-content: center;
       align-items: center;
-      z-index: 100;
+      justify-content: center;
+      flex-direction: column;
+      z-index: 9999;
     }
-
-    #welcome h1 {
-      font-size: 3em;
+    #start-screen h1 {
+      font-size: 2em;
       margin-bottom: 20px;
     }
-
-    #welcome button {
-      padding: 15px 30px;
-      font-size: 1.2em;
+    #start-screen button {
+      padding: 10px 20px;
+      font-size: 1em;
+      background-color: #28a745;
       border: none;
-      border-radius: 8px;
-      background: #444;
-      color: white;
+      border-radius: 5px;
       cursor: pointer;
-      transition: background 0.3s ease;
+      color: white;
     }
-
-    #welcome button:hover {
-      background: #666;
+    #start-screen button:hover {
+      background-color: #218838;
     }
-
-    #viewer {
+    #container {
       width: 100vw;
       height: 100vh;
+      display: none;
     }
-
     #menu {
       position: absolute;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.5);
-      padding: 8px 16px;
+      top: 20px;
+      left: 20px;
+      background-color: rgba(0,0,0,0.6);
+      padding: 10px 15px;
       border-radius: 10px;
-      display: flex;
-      gap: 10px;
-      z-index: 50;
-      flex-wrap: wrap;
-    }
-
-    #menu button {
-      padding: 6px 12px;
-      font-size: 0.9em;
-      background: #222;
       color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.3s;
+      z-index: 100;
     }
-
+    #menu button {
+      display: block;
+      background: none;
+      border: 1px solid white;
+      color: white;
+      padding: 6px 12px;
+      margin: 5px 0;
+      cursor: pointer;
+      border-radius: 5px;
+    }
     #menu button:hover {
-      background: #444;
+      background-color: rgba(255,255,255,0.2);
     }
   </style>
 </head>
-
 <body>
-
-  <!-- Tela de boas-vindas -->
-  <div id="welcome">
-    <h1>Bem-vindo ao Tour Virtual</h1>
-    <button onclick="startTour()">Iniciar Tour</button>
+  <div id="start-screen">
+    <h1>Bem-vindo ao Tour Méier</h1>
+    <button onclick="startTour()">Entrar no Tour</button>
   </div>
 
-  <!-- Visualizador 360º -->
-  <div id="viewer"></div>
-
-  <!-- Menu inferior com cômodos -->
-  <div id="menu" style="display: none;">
-    <button onclick="loadPanorama('images/cozinha1.jpg')">Cozinha 1</button>
-    <button onclick="loadPanorama('images/cozinha2.jpg')">Cozinha 2</button>
-    <button onclick="loadPanorama('images/sala1.jpg')">Sala 1</button>
-    <button onclick="loadPanorama('images/sala2.jpg')">Sala 2</button>
+  <div id="menu">
+    <button onclick="goTo('sala1')">Sala 1</button>
+    <button onclick="goTo('sala2')">Sala 2</button>
+    <button onclick="goTo('cozinha1')">Cozinha 1</button>
+    <button onclick="goTo('cozinha2')">Cozinha 2</button>
   </div>
 
-  <!-- Importmap para módulos -->
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three/build/three.module.js",
-        "@photo-sphere-viewer/core": "https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core/index.module.js"
-      }
-    }
-  </script>
+  <div id="container"></div>
 
-  <!-- Script principal -->
-  <script type="module">
-    import { Viewer } from '@photo-sphere-viewer/core';
+  <script>
+    const sala1 = new PANOLENS.ImagePanorama('sala1.jpg');
+    const sala2 = new PANOLENS.ImagePanorama('sala2.jpg');
+    const cozinha1 = new PANOLENS.ImagePanorama('cozinha1.jpg');
+    const cozinha2 = new PANOLENS.ImagePanorama('cozinha2.jpg');
 
-    const viewer = new Viewer({
-      container: document.querySelector('#viewer'),
-      panorama: 'images/cozinha1.jpg',
+    // Links entre ambientes (exemplo de ida e volta)
+    sala1.link(sala2, new THREE.Vector3(3000, 0, 0), 'Ir para Sala 2');
+    sala2.link(sala1, new THREE.Vector3(-3000, 0, 0), 'Voltar para Sala 1');
+
+    sala1.link(cozinha1, new THREE.Vector3(0, 0, 3000), 'Ir para Cozinha 1');
+    cozinha1.link(sala1, new THREE.Vector3(0, 0, -3000), 'Voltar para Sala 1');
+
+    cozinha1.link(cozinha2, new THREE.Vector3(3000, 0, 0), 'Ir para Cozinha 2');
+    cozinha2.link(cozinha1, new THREE.Vector3(-3000, 0, 0), 'Voltar para Cozinha 1');
+
+    const viewer = new PANOLENS.Viewer({
+      container: document.querySelector('#container'),
+      autoRotate: true,
+      autoRotateSpeed: 0.3,
+      controlBar: true,
+      cameraFov: 75
     });
 
-    // Alterna panorama
-    window.loadPanorama = function (path) {
-      viewer.setPanorama(path);
-    };
+    viewer.add(sala1, sala2, cozinha1, cozinha2);
 
-    // Inicia o tour e oculta a tela de boas-vindas
-    window.startTour = function () {
-      document.getElementById('welcome').style.display = 'none';
-      document.getElementById('menu').style.display = 'flex';
-    };
+    const panoramas = { sala1, sala2, cozinha1, cozinha2 };
+
+    function goTo(panoramaName) {
+      viewer.setPanorama(panoramas[panoramaName]);
+    }
+
+    function startTour() {
+      document.getElementById('start-screen').style.display = 'none';
+      document.getElementById('container').style.display = 'block';
+      viewer.setPanorama(sala1);
+    }
   </script>
-
 </body>
 </html>
